@@ -8,7 +8,7 @@ FONT_PATH = "NanumGothic.ttf"  # 프로젝트 폴더에 있는 한글 폰트 파
 
 class PDF(FPDF):
     def __init__(self):
-        super().__init__()
+        super().__init__(orientation='L')  # ← 가로 방향 설정
         self.add_font("Nanum", "", FONT_PATH, uni=True)
         self.set_font("Nanum", "", 12)
         self.set_auto_page_break(auto=True, margin=15)
@@ -34,14 +34,12 @@ class PDF(FPDF):
             cell_texts = []
 
             if row_idx in merged_rows:
-                # 병합 셀
                 merged_text = str(row[0])
                 lines = self.multi_cell(sum(col_widths), 8, merged_text, border=1, align="L", split_only=True)
                 max_height = 8 * len(lines)
                 self.multi_cell(sum(col_widths), 8, merged_text, border=1, align="L")
                 self.set_y(y_start + max_height)
             else:
-                # 일반 셀
                 for i, cell in enumerate(row):
                     text = str(cell)
                     lines = self.multi_cell(col_widths[i], 8, text, border=0, align=aligns[i], split_only=True)
