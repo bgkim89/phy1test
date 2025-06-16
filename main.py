@@ -4,10 +4,8 @@ from fpdf import FPDF
 import tempfile
 import os
 
-# 프로젝트 디렉터리에 있는 폰트 경로
 FONT_PATH = "NanumGothic.ttf"
 
-# PDF 클래스 정의
 class PDF(FPDF):
     def __init__(self):
         super().__init__()
@@ -18,20 +16,20 @@ class PDF(FPDF):
         pass
 
     def chapter_title(self, title):
-        self.set_font("Nanum", "", 14)  # Bold 제거
+        self.set_font("Nanum", "", 14)
         self.cell(0, 10, title, ln=True, align="C")
         self.ln(5)
 
     def add_table(self, data, col_widths=None, align="L", bold_first_col=False):
+        epw = self.w - 2 * self.l_margin  # ✅ epw 직접 계산
         if col_widths is None:
-            col_widths = [self.epw / len(data[0])] * len(data[0])
+            col_widths = [epw / len(data[0])] * len(data[0])
         for i, row in enumerate(data):
             for j, datum in enumerate(row):
-                self.set_font("Nanum", "", 12)  # Bold 제거
+                self.set_font("Nanum", "", 12)
                 self.cell(col_widths[j], 10, str(datum), border=1, align=align)
             self.ln()
 
-# Streamlit 앱
 st.title("수행평가 결과 PDF 생성기")
 
 uploaded_file = st.file_uploader("CSV 파일 업로드", type=["csv"])
