@@ -3,6 +3,7 @@ import pandas as pd
 from fpdf import FPDF
 import tempfile
 import os
+import textwrap
 
 FONT_PATH = "NanumGothic.ttf"  # 같은 디렉토리에 TTF 파일이 있어야 함
 
@@ -32,15 +33,39 @@ class PDF(FPDF):
 
         for row_idx, row in enumerate(data):
             if row_idx in merged_rows:
-                merged_text = str(row[0])
-                self.cell(sum(col_widths), 10, merged_text, border=1, align="L")
-                self.ln()
+                # 병합 셀 한 줄로
+                self.multi_cell(sum(col_widths), 10, str(row[0]), border=1, align="L")
+                self.ln(1)
             else:
+                # 각 셀의 높이를 계산하여 맞춤
+                line_heights = []
+                cell_lines = []
+
                 for i, datum in enumerate(row):
-                    self.set_font("Nanum", "", 12)
-                    self.cell(col_widths[i], 10, str(datum), border=1, align=aligns[i])
-                self.ln()
-        self.ln(5)  # 표 아래 여백 추가
+                    wrapped = self.multi_cell_lines(col_widths[i], str(datum))
+                    cell_lines.append(wrapped)
+                    line_heights.append(len(wrapped))
+
+                max_lines = max(line_heights)
+                row_height = 5 * max_lines
+
+                x_start = self.get_x()
+                y_start = self.get_y()
+
+                for i, lines in enumerate(cell_lines):
+                    x = self.get_x()
+                    y = self.get_y()
+                    self.rect(x, y, col_widths[i], row_height)
+                    self.multi_cell(col_widths[i], 5, "\n".join(lines), border=0, align=aligns[i])
+                    self.set_xy(x + col_widths[i], y_start)
+
+                self.ln(row_height)
+        self.ln(5)  # 표 아래 여백
+
+    def multi_cell_lines(self, width, text):
+        # 텍스트를 셀 너비 기준으로 줄바꿈
+        wrapped = textwrap.wrap(text, width=int(width * 0.45))  # 조절 가능
+        return wrapped if wrapped else [""]
 
 st.title("수행평가 결과 PDF 생성기")
 
