@@ -4,7 +4,7 @@ from fpdf import FPDF
 import tempfile
 import os
 
-# 프로젝트 내에 포함한 한글 폰트 경로
+# 프로젝트 디렉터리에 있는 폰트 경로
 FONT_PATH = "NanumGothic.ttf"
 
 # PDF 클래스 정의
@@ -18,7 +18,7 @@ class PDF(FPDF):
         pass
 
     def chapter_title(self, title):
-        self.set_font("Nanum", "B", 14)
+        self.set_font("Nanum", "", 14)  # Bold 제거
         self.cell(0, 10, title, ln=True, align="C")
         self.ln(5)
 
@@ -27,14 +27,11 @@ class PDF(FPDF):
             col_widths = [self.epw / len(data[0])] * len(data[0])
         for i, row in enumerate(data):
             for j, datum in enumerate(row):
-                if bold_first_col and j == 0:
-                    self.set_font("Nanum", "B", 12)
-                else:
-                    self.set_font("Nanum", "", 12)
+                self.set_font("Nanum", "", 12)  # Bold 제거
                 self.cell(col_widths[j], 10, str(datum), border=1, align=align)
             self.ln()
 
-# Streamlit 앱 시작
+# Streamlit 앱
 st.title("수행평가 결과 PDF 생성기")
 
 uploaded_file = st.file_uploader("CSV 파일 업로드", type=["csv"])
@@ -48,21 +45,17 @@ if uploaded_file:
 
     for idx, row in df.iterrows():
         pdf.add_page()
-
         pdf.chapter_title("2학년 1학기 물리학1 수행평가 결과 안내서")
 
-        # 1. 인적사항 표
+        # 1. 인적사항
         table1 = [[row[0], row[1], row[2], '총점(40점 만점):', row[3]]]
         pdf.add_table(table1, align="R")
 
         # 2. 실험 평가
-        pdf.set_font("Nanum", "B", 12)
+        pdf.set_font("Nanum", "", 12)
         pdf.cell(0, 10, "1. 실험 평가: 실험(25점)=실험 활동(10점)+활동지 작성(15점)", ln=True)
 
-        table2 = [
-            ["(1) 채점 결과(점수)", row[4]],
-            ["- 17개 항목 중 맞은 항목 개수", row[7]],
-        ]
+        table2 = [["(1) 채점 결과(점수)", row[4]], ["- 17개 항목 중 맞은 항목 개수", row[7]]]
         pdf.add_table(table2)
 
         table3 = [
@@ -103,7 +96,7 @@ if uploaded_file:
         pdf.add_table(table6)
 
         # 3. 발표 평가
-        pdf.set_font("Nanum", "B", 12)
+        pdf.set_font("Nanum", "", 12)
         pdf.cell(0, 10, "2. 발표 평가: 창의 융합 활동 발표(15점)=참여도(5점)+충실성(5점)+의사 소통(5점)", ln=True)
 
         table7 = [["(1) 채점 결과(점수)", row[42]]]
