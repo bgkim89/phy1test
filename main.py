@@ -8,9 +8,9 @@ FONT_PATH = "NanumGothic.ttf"  # 프로젝트 폴더에 있는 한글 폰트 파
 
 class PDF(FPDF):
     def __init__(self):
-        super().__init__(orientation='L')  # 가로 방향
+        super().__init__(orientation='L', format='A4')  # 용지를 가로 방향으로 설정
         self.add_font("Nanum", "", FONT_PATH, uni=True)
-        self.set_font("Nanum", "", 12)
+        self.set_font("Nanum", "", 10)  # 글씨 크기를 원래의 80%로 설정
         self.set_auto_page_break(auto=True, margin=15)
 
     def chapter_title(self, title):
@@ -19,8 +19,6 @@ class PDF(FPDF):
         self.ln(5)
 
     def add_table(self, data, col_widths=None, aligns=None, merged_rows=None):
-        self.set_font("Nanum", "", 9.6)  # 표 글씨 80%
-
         epw = self.w - 2 * self.l_margin
         num_cols = len(data[0])
         if col_widths is None:
@@ -32,33 +30,32 @@ class PDF(FPDF):
 
         for row_idx, row in enumerate(data):
             y_start = self.get_y()
-            max_height = 0
-            cell_texts = []
+            max_lines = 1
+            cell_lines = []
 
             if row_idx in merged_rows:
                 merged_text = str(row[0])
                 lines = self.multi_cell(sum(col_widths), 8, merged_text, border=1, align="L", split_only=True)
-                max_height = 8 * len(lines)
                 self.multi_cell(sum(col_widths), 8, merged_text, border=1, align="L")
-                self.set_y(y_start + max_height)
+                self.set_y(y_start + 8 * len(lines))
             else:
                 for i, cell in enumerate(row):
                     text = str(cell)
                     lines = self.multi_cell(col_widths[i], 8, text, border=0, align=aligns[i], split_only=True)
-                    cell_texts.append((text, lines))
-                    max_height = max(max_height, 8 * len(lines))
+                    cell_lines.append((text, lines))
+                    max_lines = max(max_lines, len(lines))
 
+                row_height = 8 * max_lines
                 x_start = self.get_x()
                 y_start = self.get_y()
 
-                for i, (text, lines) in enumerate(cell_texts):
+                for i, (text, lines) in enumerate(cell_lines):
                     self.set_xy(x_start + sum(col_widths[:i]), y_start)
-                    self.multi_cell(col_widths[i], 8, text, border=1, align=aligns[i])
+                    self.multi_cell(col_widths[i], row_height / len(lines), text, border=1, align=aligns[i])
 
-                self.set_y(y_start + max_height)
+                self.set_y(y_start + row_height)
 
         self.ln(5)
-        self.set_font("Nanum", "", 12)  # 표 외 글씨는 원래 크기로 복원
 
 # Streamlit 앱 시작
 st.title("수행평가 결과 PDF 생성기")
@@ -80,16 +77,12 @@ if uploaded_file:
         pdf.add_table(table1, aligns=aligns1)
 
         # 2. 실험 평가
-        pdf.set_font("Nanum", "", 12)
+        pdf.set_font("Nanum", "", 10)
         pdf.cell(0, 10, "1. 실험 평가: 실험(25점)=실험 활동(10점)+활동지 작성(15점)", ln=True)
         pdf.ln(2)
 
-        # 공통 컬럼 폭 설정 (두 열짜리 표의 경우: 1열 30%, 2열 70%)
-        epw = pdf.w - 2 * pdf.l_margin
-        col_widths_2col = [epw * 0.3, epw * 0.7]
-
         table2 = [["(1) 채점 결과(점수)", row[4]], ["- 17개 항목 중 맞은 항목 개수", row[7]]]
-        pdf.add_table(table2, col_widths=col_widths_2col)
+        pdf.add_table(table2, col_widths=[60 * 0.5, 60 * 1.5])
 
         table3 = [
             ["(2-1) [3. 실험 결과] 관련 감점 사유", ""],
@@ -98,7 +91,7 @@ if uploaded_file:
             ["- 3번 항목", row[27]],
             ["- 4번 항목", row[28]],
         ]
-        pdf.add_table(table3, col_widths=col_widths_2col, merged_rows=[0])
+        pdf.add_table(table3, col_widths=[60 * 0.5, 60 * 1.5], merged_rows=[0])
 
         table4 = [
             ["(2-2) [4.결과 정리 및 해석] 관련 감점 사유", ""],
@@ -109,7 +102,7 @@ if uploaded_file:
             ["- 9번 항목", row[33]],
             ["- 10번 항목", row[34]],
         ]
-        pdf.add_table(table4, col_widths=col_widths_2col, merged_rows=[0])
+        pdf.add_table(table4, col_widths=[60 * 0.5, 60 * 1.5], merged_rows=[0])
 
         table5 = [
             ["(2-3) [5. 생각해보기] 관련 감점 사유", ""],
@@ -119,22 +112,22 @@ if uploaded_file:
             ["- 14번 항목", row[38]],
             ["- 15번 항목", row[39]],
         ]
-        pdf.add_table(table5, col_widths=col_widths_2col, merged_rows=[0])
+        pdf.add_table(table5, col_widths=[60 * 0.5, 60 * 1.5], merged_rows=[0])
 
         table6 = [
             ["(2-4) [6. 탐구 확인 문제] 관련 감점 사유", ""],
             ["- 16번 항목", row[40]],
             ["- 17번 항목", row[41]],
         ]
-        pdf.add_table(table6, col_widths=col_widths_2col, merged_rows=[0])
+        pdf.add_table(table6, col_widths=[60 * 0.5, 60 * 1.5], merged_rows=[0])
 
         # 3. 발표 평가
-        pdf.set_font("Nanum", "", 12)
+        pdf.set_font("Nanum", "", 10)
         pdf.cell(0, 10, "2. 발표 평가: 창의 융합 활동 발표(15점)=참여도(5점)+충실성(5점)+의사 소통(5점)", ln=True)
         pdf.ln(2)
 
         table7 = [["(1) 채점 결과(점수)", row[42]]]
-        pdf.add_table(table7, col_widths=col_widths_2col)
+        pdf.add_table(table7, col_widths=[60 * 0.5, 60 * 1.5])
 
         table8 = [
             ["(2) 감점 사유", ""],
@@ -142,7 +135,7 @@ if uploaded_file:
             ["- 충실성", row[44]],
             ["- 의사 소통", row[45]],
         ]
-        pdf.add_table(table8, col_widths=col_widths_2col, merged_rows=[0])
+        pdf.add_table(table8, col_widths=[60 * 0.5, 60 * 1.5], merged_rows=[0])
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         pdf.output(tmp.name)
