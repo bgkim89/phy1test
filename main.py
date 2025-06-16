@@ -78,17 +78,13 @@ if uploaded_file:
         aligns1 = ["C", "C", "C", "R", "L"]
         pdf.add_table(table1, aligns=aligns1)
 
-        # 공통 폭 지정 (1열 좁게, 2열 넓게)
-        epw = pdf.w - 2 * pdf.l_margin
-        widths_2col = [epw * 1/4, epw * 3/4]
-
         # 2. 실험 평가
         pdf.set_font("Nanum", "", 12)
         pdf.cell(0, 10, "1. 실험 평가: 실험(25점)=실험 활동(10점)+활동지 작성(15점)", ln=True)
         pdf.ln(2)
 
         table2 = [["(1) 채점 결과(점수)", row[4]], ["- 17개 항목 중 맞은 항목 개수", row[7]]]
-        pdf.add_table(table2, col_widths=widths_2col)
+        pdf.add_table(table2)
 
         table3 = [
             ["(2-1) [3. 실험 결과] 관련 감점 사유", ""],
@@ -97,7 +93,7 @@ if uploaded_file:
             ["- 3번 항목", row[27]],
             ["- 4번 항목", row[28]],
         ]
-        pdf.add_table(table3, col_widths=widths_2col, merged_rows=[0])
+        pdf.add_table(table3, merged_rows=[0])
 
         table4 = [
             ["(2-2) [4.결과 정리 및 해석] 관련 감점 사유", ""],
@@ -108,7 +104,7 @@ if uploaded_file:
             ["- 9번 항목", row[33]],
             ["- 10번 항목", row[34]],
         ]
-        pdf.add_table(table4, col_widths=widths_2col, merged_rows=[0])
+        pdf.add_table(table4, merged_rows=[0])
 
         table5 = [
             ["(2-3) [5. 생각해보기] 관련 감점 사유", ""],
@@ -118,14 +114,14 @@ if uploaded_file:
             ["- 14번 항목", row[38]],
             ["- 15번 항목", row[39]],
         ]
-        pdf.add_table(table5, col_widths=widths_2col, merged_rows=[0])
+        pdf.add_table(table5, merged_rows=[0])
 
         table6 = [
             ["(2-4) [6. 탐구 확인 문제] 관련 감점 사유", ""],
             ["- 16번 항목", row[40]],
             ["- 17번 항목", row[41]],
         ]
-        pdf.add_table(table6, col_widths=widths_2col, merged_rows=[0])
+        pdf.add_table(table6, merged_rows=[0])
 
         # 3. 발표 평가
         pdf.set_font("Nanum", "", 12)
@@ -133,7 +129,7 @@ if uploaded_file:
         pdf.ln(2)
 
         table7 = [["(1) 채점 결과(점수)", row[42]]]
-        pdf.add_table(table7, col_widths=widths_2col)
+        pdf.add_table(table7)
 
         table8 = [
             ["(2) 감점 사유", ""],
@@ -141,7 +137,7 @@ if uploaded_file:
             ["- 충실성", row[44]],
             ["- 의사 소통", row[45]],
         ]
-        pdf.add_table(table8, col_widths=widths_2col, merged_rows=[0])
+        pdf.add_table(table8, merged_rows=[0])
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         pdf.output(tmp.name)
