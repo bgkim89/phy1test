@@ -77,6 +77,9 @@ st.title("수행평가 결과 PDF 생성기")
 uploaded_file = st.file_uploader("CSV 파일 업로드", type=["csv"])
 
 if uploaded_file:
+    # CSV 파일을 읽을 때 헤더가 없는 경우, header=None을 지정하여 숫자로 된 열 인덱스를 사용하도록 할 수 있습니다.
+    # 하지만 기존 코드에서 row[0], row[1] 등으로 접근하는 것으로 보아, Pandas가 자동으로 숫자 인덱스를 부여하거나
+    # 이미 헤더가 있는 경우로 처리되고 있습니다.
     df = pd.read_csv(uploaded_file) 
     st.success("CSV 파일이 업로드되었습니다.")
 
@@ -147,12 +150,16 @@ if uploaded_file:
         table7 = [["(1) 채점 결과(점수)", row[42]]]
         pdf.add_table(table7, col_widths=col_widths_2col)
 
-        # 여덟 번째 표 수정
+        # 여덟 번째 표 수정: 열 인덱스 사용 (이전 방식 복원 시도)
+        # 중요: 이 인덱스들은 CSV 파일의 실제 열 위치에 따라 다를 수 있습니다.
+        # CSV를 열어 'AV', 'AW', 'AX'에 해당하는 열의 정확한 0-기반 인덱스를 확인하세요.
+        # 예를 들어, AU가 42 (43번째), AV가 43 (44번째), AW가 44 (45번째), AX가 45 (46번째)일 수 있습니다.
+        # 당신의 이전 요청들을 조합해보면, AU -> 43, AV -> 44, AW -> 45, AX -> 46으로 보입니다.
         table8 = [
             ["(2) 감점 사유", ""],
-            ["- 참여도", row['AV']],   # CSV의 AV열 데이터로 변경
-            ["- 충실성", row['AW']],   # CSV의 AW열 데이터로 변경
-            ["- 의사 소통", row['AX']], # CSV의 AX열 데이터로 변경
+            ["- 참여도", row[43]],   # AV열 데이터로 추정되는 인덱스 (이전 AU가 43이었다면, AV는 44일 수 있음. 확인 필요)
+            ["- 충실성", row[44]],   # AW열 데이터로 추정되는 인덱스
+            ["- 의사 소통", row[45]], # AX열 데이터로 추정되는 인덱스
         ]
         pdf.add_table(table8, col_widths=col_widths_2col, merged_rows=[0])
 
