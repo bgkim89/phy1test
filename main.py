@@ -4,7 +4,7 @@ from fpdf import FPDF
 import tempfile
 import os
 
-FONT_PATH = "NanumGothic.ttf"
+FONT_PATH = "NanumGothic.ttf"  # 앱과 같은 디렉토리에 해당 TTF 파일 위치 필요
 
 class PDF(FPDF):
     def __init__(self):
@@ -20,14 +20,17 @@ class PDF(FPDF):
         self.cell(0, 10, title, ln=True, align="C")
         self.ln(5)
 
-    def add_table(self, data, col_widths=None, align="L", bold_first_col=False):
-        epw = self.w - 2 * self.l_margin  # ✅ epw 직접 계산
+    def add_table(self, data, col_widths=None, aligns=None):
+        epw = self.w - 2 * self.l_margin
         if col_widths is None:
             col_widths = [epw / len(data[0])] * len(data[0])
-        for i, row in enumerate(data):
-            for j, datum in enumerate(row):
+        if aligns is None:
+            aligns = ["L"] * len(data[0])
+
+        for row in data:
+            for i, datum in enumerate(row):
                 self.set_font("Nanum", "", 12)
-                self.cell(col_widths[j], 10, str(datum), border=1, align=align)
+                self.cell(col_widths[i], 10, str(datum), border=1, align=aligns[i])
             self.ln()
 
 st.title("수행평가 결과 PDF 생성기")
@@ -47,7 +50,8 @@ if uploaded_file:
 
         # 1. 인적사항
         table1 = [[row[0], row[1], row[2], '총점(40점 만점):', row[3]]]
-        pdf.add_table(table1, align="R")
+        aligns1 = ["C", "C", "C", "R", "L"]
+        pdf.add_table(table1, aligns=aligns1)
 
         # 2. 실험 평가
         pdf.set_font("Nanum", "", 12)
