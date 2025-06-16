@@ -6,7 +6,7 @@ import os
 
 # --- 폰트 설정 ---
 # 프로젝트 폴더에 NanumGothic.ttf 파일이 있어야 합니다.
-FONT_PATH = "NanumGothic.ttf" 
+FONT_PATH = "NanumGothic.ttf"
 
 # --- PDF 클래스 정의 ---
 class PDF(FPDF):
@@ -96,7 +96,7 @@ class PDF(FPDF):
 
 ---
 
-# Streamlit 앱 시작
+## Streamlit 앱 시작
 
 ```python
 st.title("수행평가 결과 PDF 생성기")
@@ -184,9 +184,9 @@ if uploaded_file:
         table7 = [["(1) 채점 결과(점수)", row[42]]]
         pdf.add_table(table7, col_widths=col_widths_2col)
 
-        # 3. 발표 평가 - (2) 감점 사유 (여덟 번째 표 - 요청에 따라 수정)
-        # AU, AV, AW 열이 각각 인덱스 43, 44, 45에 해당한다고 가정합니다.
-        # CSV 파일의 실제 열 순서에 따라 이 인덱스들을 조정해야 할 수 있습니다.
+        # 3. 발표 평가 - (2) 감점 사유 (여덟 번째 표 - 요청에 따라 최종 수정)
+        # CSV의 AU, AV, AW 열 데이터가 각각 인덱스 43, 44, 45에 해당한다고 가정합니다.
+        # 만약 이 인덱스들이 실제 CSV 열 순서와 다르다면, CSV 파일을 확인 후 정확한 인덱스로 수정해야 합니다.
         table8 = [
             ["(2) 감점 사유", ""],
             ["- 참여도", row[43]],   # CSV의 AU열 데이터 (인덱스 43으로 추정)
@@ -195,13 +195,13 @@ if uploaded_file:
         ]
         pdf.add_table(table8, col_widths=col_widths_2col, merged_rows=[0])
 
-    # --- PDF 저장 및 다운로드 ---
+    # --- PDF 파일 저장 및 Streamlit 다운로드 버튼 제공 ---
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        pdf.output(tmp.name) # PDF 파일 생성
+        pdf.output(tmp.name) # PDF 파일을 임시 경로에 저장
         st.download_button(
             label="PDF 다운로드",
-            data=open(tmp.name, "rb").read(),
-            file_name="수행평가_결과.pdf",
-            mime="application/pdf"
+            data=open(tmp.name, "rb").read(), # 저장된 PDF 파일을 읽어와서 다운로드 데이터로 제공
+            file_name="수행평가_결과.pdf", # 다운로드될 파일 이름
+            mime="application/pdf" # 파일 MIME 타입
         )
         os.unlink(tmp.name) # 임시 파일 삭제
