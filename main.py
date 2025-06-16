@@ -4,7 +4,7 @@ from fpdf import FPDF
 import tempfile
 import os
 
-FONT_PATH = "NanumGothic.ttf"  # 같은 디렉토리에 TTF 파일 있어야 함
+FONT_PATH = "NanumGothic.ttf"  # 같은 디렉토리에 TTF 파일이 있어야 함
 
 class PDF(FPDF):
     def __init__(self):
@@ -32,8 +32,6 @@ class PDF(FPDF):
 
         for row_idx, row in enumerate(data):
             if row_idx in merged_rows:
-                self.set_font("Nanum", "", 12)
-                # 병합할 텍스트를 첫 셀에서 쓰고 나머지 셀은 생략
                 merged_text = str(row[0])
                 self.cell(sum(col_widths), 10, merged_text, border=1, align="L")
                 self.ln()
@@ -42,6 +40,7 @@ class PDF(FPDF):
                     self.set_font("Nanum", "", 12)
                     self.cell(col_widths[i], 10, str(datum), border=1, align=aligns[i])
                 self.ln()
+        self.ln(5)  # 표 아래 여백 추가
 
 st.title("수행평가 결과 PDF 생성기")
 
@@ -66,6 +65,7 @@ if uploaded_file:
         # 2. 실험 평가
         pdf.set_font("Nanum", "", 12)
         pdf.cell(0, 10, "1. 실험 평가: 실험(25점)=실험 활동(10점)+활동지 작성(15점)", ln=True)
+        pdf.ln(2)
 
         table2 = [["(1) 채점 결과(점수)", row[4]], ["- 17개 항목 중 맞은 항목 개수", row[7]]]
         pdf.add_table(table2)
@@ -110,6 +110,7 @@ if uploaded_file:
         # 3. 발표 평가
         pdf.set_font("Nanum", "", 12)
         pdf.cell(0, 10, "2. 발표 평가: 창의 융합 활동 발표(15점)=참여도(5점)+충실성(5점)+의사 소통(5점)", ln=True)
+        pdf.ln(2)
 
         table7 = [["(1) 채점 결과(점수)", row[42]]]
         pdf.add_table(table7)
