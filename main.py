@@ -155,12 +155,13 @@ if uploaded_file:
         # CSV를 열어 'AV', 'AW', 'AX'에 해당하는 열의 정확한 0-기반 인덱스를 확인하세요.
         # 예를 들어, AU가 42 (43번째), AV가 43 (44번째), AW가 44 (45번째), AX가 45 (46번째)일 수 있습니다.
         # 당신의 이전 요청들을 조합해보면, AU -> 43, AV -> 44, AW -> 45, AX -> 46으로 보입니다.
-        table8 = [
-            ["(2) 감점 사유", ""],
-            ["- 참여도", row[43]],   # AV열 데이터로 추정되는 인덱스 (이전 AU가 43이었다면, AV는 44일 수 있음. 확인 필요)
-            ["- 충실성", row[44]],   # AW열 데이터로 추정되는 인덱스
-            ["- 의사 소통", row[45]], # AX열 데이터로 추정되는 인덱스
-        ]
+       table8 = [
+    ["(2) 감점 사유", ""],
+    ["- 참여도", row[44]],   # AU열 데이터 (인덱스 44)
+    ["- 충실성", row[45]],   # AV열 데이터 (인덱스 45)
+    ["- 의사 소통", row[46]], # AW열 데이터 (인덱스 46)
+]
+     
         pdf.add_table(table8, col_widths=col_widths_2col, merged_rows=[0])
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
