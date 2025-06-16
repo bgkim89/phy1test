@@ -11,7 +11,7 @@ class PDF(FPDF):
         super().__init__(orientation='L')  # 가로 방향
         self.add_font("Nanum", "", FONT_PATH, uni=True)
         self.set_font("Nanum", "", 12)
-        self.set_auto_page_break(auto=True, margin=15) # Keep auto page break, but we'll add manual checks
+        self.set_auto_page_break(auto=True, margin=15)
 
     def chapter_title(self, title):
         self.set_font("Nanum", "", 14)
@@ -30,67 +30,47 @@ class PDF(FPDF):
         if merged_rows is None:
             merged_rows = []
 
-        # Calculate max height of the table to estimate if it fits (optional, more for full table fit)
-        # However, for row-by-row control, we check each row.
-
         for row_idx, row in enumerate(data):
             y_start_of_row = self.get_y()
             max_height_for_current_row = 0
             
             # Simulate multi_cell to get required height for the current row
-            # This is crucial for pre-checking page breaks
             if row_idx in merged_rows:
                 merged_text = str(row[0])
-                # Temporarily save current position
                 x_temp, y_temp = self.get_x(), self.get_y()
-                # Use split_only to calculate height without drawing
                 lines = self.multi_cell(sum(col_widths), 8, merged_text, border=0, align="L", split_only=True)
                 max_height_for_current_row = 8 * len(lines)
-                # Restore position
                 self.set_xy(x_temp, y_temp)
             else:
                 for i, cell in enumerate(row):
                     text = str(cell)
-                    # Temporarily save current position
                     x_temp, y_temp = self.get_x(), self.get_y()
-                    # Use split_only to calculate height without drawing
                     lines = self.multi_cell(col_widths[i], 8, text, border=0, align=aligns[i], split_only=True)
                     max_height_for_current_row = max(max_height_for_current_row, 8 * len(lines))
-                    # Restore position
                     self.set_xy(x_temp, y_temp)
 
-            # Check if the current row will fit on the page
-            # self.b_margin is the bottom margin, so self.page_break_trigger is y position where break occurs.
-            # We want to check if the row's end will exceed the page break trigger.
             if y_start_of_row + max_height_for_current_row > self.page_break_trigger:
-                # If it doesn't fit, add a new page before drawing this row
                 self.add_page()
-                # If you have headers for your tables, you might want to redraw them here
-                # For this specific issue (splitting within the table), adding a page is enough.
-                y_start_of_row = self.get_y() # Reset y_start_of_row for the new page
+                y_start_of_row = self.get_y() 
 
             # Now, actually draw the row
             if row_idx in merged_rows:
                 merged_text = str(row[0])
                 self.multi_cell(sum(col_widths), 8, merged_text, border=1, align="L")
             else:
-                x_start_row_drawing = self.get_x() # Store X for resetting after drawing cells
-                current_y_for_row = self.get_y() # Store Y for setting after drawing cells
+                x_start_row_drawing = self.get_x()
+                current_y_for_row = self.get_y()
 
                 for i, cell in enumerate(row):
                     text = str(cell)
-                    # Set position for current cell
                     self.set_xy(x_start_row_drawing + sum(col_widths[:i]), current_y_for_row)
-                    # Draw cell content. If content is too long for cell, multi_cell will handle line breaks within the cell.
                     self.multi_cell(col_widths[i], 8, text, border=1, align=aligns[i])
                 
-                # After drawing all cells in the row, move Y down by the max height of any cell in that row
-                # and reset X to the left margin for the next row.
                 self.set_y(current_y_for_row + max_height_for_current_row)
-                self.set_x(self.l_margin) # Reset X to left margin for the next row
+                self.set_x(self.l_margin)
 
         self.ln(5)
-        self.set_font("Nanum", "", 12)  # 표 외 글씨는 원래 크기로 복원
+        self.set_font("Nanum", "", 12)
 
 # Streamlit 앱 시작
 st.title("수행평가 결과 PDF 생성기")
@@ -103,7 +83,7 @@ if uploaded_file:
     pdf = PDF()
 
     for idx, row in df.iterrows():
-        pdf.add_page() # Start each student's report on a new page
+        pdf.add_page()
         pdf.chapter_title("2학년 1학기 물리학1 수행평가 결과 안내서")
 
         # 1. 인적사항
@@ -116,7 +96,6 @@ if uploaded_file:
         pdf.cell(0, 10, "1. 실험 평가: 실험(25점)=실험 활동(10점)+활동지 작성(15점)", ln=True)
         pdf.ln(2)
 
-        # 공통 컬럼 폭 설정 (두 열짜리 표의 경우: 1열 30%, 2열 70%)
         epw = pdf.w - 2 * pdf.l_margin
         col_widths_2col = [epw * 0.3, epw * 0.7]
 
@@ -153,10 +132,6 @@ if uploaded_file:
         ]
         pdf.add_table(table5, col_widths=col_widths_2col, merged_rows=[0])
 
-        # --- Tables 6, 7, 8: Problematic tables handled by the improved add_table ---
-        # The key improvement is within the add_table method itself,
-        # which now performs a pre-check before drawing each row.
-
         table6 = [
             ["(2-4) [6. 탐구 확인 문제] 관련 감점 사유", ""],
             ["- 16번 항목", row[40]],
@@ -172,11 +147,12 @@ if uploaded_file:
         table7 = [["(1) 채점 결과(점수)", row[42]]]
         pdf.add_table(table7, col_widths=col_widths_2col)
 
+        # 여덟 번째 표 수정
         table8 = [
             ["(2) 감점 사유", ""],
-            ["- 참여도", row[43]],
-            ["- 충실성", row[44]],
-            ["- -의사 소통", row[45]],
+            ["- 참여도", row['AU']], # CSV의 AU열 데이터
+            ["- 충실성", row['AV']], # CSV의 AV열 데이터
+            ["- 의사 소통", row['AW']], # CSV의 AW열 데이터
         ]
         pdf.add_table(table8, col_widths=col_widths_2col, merged_rows=[0])
 
