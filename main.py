@@ -3,18 +3,15 @@ import pandas as pd
 from fpdf import FPDF
 import tempfile
 import os
-import textwrap
 
-FONT_PATH = "NanumGothic.ttf"  # 같은 디렉토리에 TTF 파일이 있어야 함
+FONT_PATH = "NanumGothic.ttf"  # 프로젝트 폴더에 있는 한글 폰트 파일
 
 class PDF(FPDF):
     def __init__(self):
         super().__init__()
         self.add_font("Nanum", "", FONT_PATH, uni=True)
         self.set_font("Nanum", "", 12)
-
-    def header(self):
-        pass
+        self.set_auto_page_break(auto=True, margin=15)
 
     def chapter_title(self, title):
         self.set_font("Nanum", "", 14)
@@ -32,43 +29,38 @@ class PDF(FPDF):
             merged_rows = []
 
         for row_idx, row in enumerate(data):
+            y_start = self.get_y()
+            max_height = 0
+            cell_texts = []
+
             if row_idx in merged_rows:
-                # 병합 셀 한 줄로
-                self.multi_cell(sum(col_widths), 10, str(row[0]), border=1, align="L")
-                self.ln(1)
+                # 병합 셀
+                merged_text = str(row[0])
+                lines = self.multi_cell(sum(col_widths), 8, merged_text, border=1, align="L", split_only=True)
+                max_height = 8 * len(lines)
+                self.multi_cell(sum(col_widths), 8, merged_text, border=1, align="L")
+                self.set_y(y_start + max_height)
             else:
-                # 각 셀의 높이를 계산하여 맞춤
-                line_heights = []
-                cell_lines = []
-
-                for i, datum in enumerate(row):
-                    wrapped = self.multi_cell_lines(col_widths[i], str(datum))
-                    cell_lines.append(wrapped)
-                    line_heights.append(len(wrapped))
-
-                max_lines = max(line_heights)
-                row_height = 5 * max_lines
+                # 일반 셀
+                for i, cell in enumerate(row):
+                    text = str(cell)
+                    lines = self.multi_cell(col_widths[i], 8, text, border=0, align=aligns[i], split_only=True)
+                    cell_texts.append((text, lines))
+                    max_height = max(max_height, 8 * len(lines))
 
                 x_start = self.get_x()
                 y_start = self.get_y()
 
-                for i, lines in enumerate(cell_lines):
-                    x = self.get_x()
-                    y = self.get_y()
-                    self.rect(x, y, col_widths[i], row_height)
-                    self.multi_cell(col_widths[i], 5, "\n".join(lines), border=0, align=aligns[i])
-                    self.set_xy(x + col_widths[i], y_start)
+                for i, (text, lines) in enumerate(cell_texts):
+                    self.set_xy(x_start + sum(col_widths[:i]), y_start)
+                    self.multi_cell(col_widths[i], 8, text, border=1, align=aligns[i])
 
-                self.ln(row_height)
-        self.ln(5)  # 표 아래 여백
+                self.set_y(y_start + max_height)
 
-    def multi_cell_lines(self, width, text):
-        # 텍스트를 셀 너비 기준으로 줄바꿈
-        wrapped = textwrap.wrap(text, width=int(width * 0.45))  # 조절 가능
-        return wrapped if wrapped else [""]
+        self.ln(5)  # 표 하단 여백
 
+# Streamlit 앱 시작
 st.title("수행평가 결과 PDF 생성기")
-
 uploaded_file = st.file_uploader("CSV 파일 업로드", type=["csv"])
 
 if uploaded_file:
@@ -76,7 +68,6 @@ if uploaded_file:
     st.success("CSV 파일이 업로드되었습니다.")
 
     pdf = PDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
 
     for idx, row in df.iterrows():
         pdf.add_page()
