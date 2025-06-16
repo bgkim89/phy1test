@@ -4,7 +4,7 @@ from fpdf import FPDF
 import tempfile
 import os
 
-FONT_PATH = "NanumGothic.ttf"  # 같은 디렉토리에 TTF 파일이 있어야 함
+FONT_PATH = "NanumGothic.ttf"  # 같은 디렉토리에 있어야 함
 
 class PDF(FPDF):
     def __init__(self):
@@ -32,15 +32,25 @@ class PDF(FPDF):
 
         for row_idx, row in enumerate(data):
             if row_idx in merged_rows:
-                merged_text = str(row[0])
-                self.cell(sum(col_widths), 10, merged_text, border=1, align="L")
-                self.ln()
+                self.multi_cell(sum(col_widths), 10, str(row[0]), border=1, align="L")
             else:
-                for i, datum in enumerate(row):
-                    self.set_font("Nanum", "", 12)
-                    self.cell(col_widths[i], 10, str(datum), border=1, align=aligns[i])
-                self.ln()
-        self.ln(5)  # 표 아래 여백 추가
+                # 줄 수 측정
+                line_counts = []
+                for i, cell in enumerate(row):
+                    text = str(cell)
+                    line_count = self.get_string_width(text) / (col_widths[i] - 2)
+                    line_counts.append(int(line_count) + 1)
+                max_lines = max(line_counts)
+                row_height = 6 * max_lines
+
+                x_start = self.get_x()
+                y_start = self.get_y()
+
+                for i, cell in enumerate(row):
+                    self.set_xy(x_start + sum(col_widths[:i]), y_start)
+                    self.multi_cell(col_widths[i], 6, str(cell), border=1, align=aligns[i])
+                self.ln(row_height)
+        self.ln(5)
 
 st.title("수행평가 결과 PDF 생성기")
 
