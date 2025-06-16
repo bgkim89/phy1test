@@ -176,7 +176,7 @@ if uploaded_file:
             ["(2) 감점 사유", ""],
             ["- 참여도", row[46]],
             ["- 충실성", row[47]],
-            ["- -의사 소통", row[48]],
+            ["- 의사 소통", row[48]],
         ]
         pdf.add_table(table8, col_widths=col_widths_2col, merged_rows=[0])
 
