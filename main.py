@@ -8,7 +8,7 @@ FONT_PATH = "NanumGothic.ttf"  # 프로젝트 폴더에 있는 한글 폰트 파
 
 class PDF(FPDF):
     def __init__(self):
-        super().__init__(orientation='L')  # ← 가로 방향 설정
+        super().__init__(orientation='L')  # 가로 방향
         self.add_font("Nanum", "", FONT_PATH, uni=True)
         self.set_font("Nanum", "", 12)
         self.set_auto_page_break(auto=True, margin=15)
@@ -19,6 +19,8 @@ class PDF(FPDF):
         self.ln(5)
 
     def add_table(self, data, col_widths=None, aligns=None, merged_rows=None):
+        self.set_font("Nanum", "", 9.6)  # ← 표 글씨 크기 80%로 줄임
+
         epw = self.w - 2 * self.l_margin
         num_cols = len(data[0])
         if col_widths is None:
@@ -55,7 +57,9 @@ class PDF(FPDF):
 
                 self.set_y(y_start + max_height)
 
-        self.ln(5)  # 표 하단 여백
+        self.ln(5)
+
+        self.set_font("Nanum", "", 12)  # ← 표 끝나고 기본 크기 복원
 
 # Streamlit 앱 시작
 st.title("수행평가 결과 PDF 생성기")
